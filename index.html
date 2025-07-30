@@ -1,10 +1,46 @@
-<div style="max-width: 480px; margin: auto; background: #fff0f5; padding: 20px; border-radius: 10px;"> <label>初始本金（美元）</label> <input type="number" id="initial" value="100" style="width:100%; padding:8px; margin-bottom:10px;" />
-<label>每日收益率（例如万分之五请输入 0.0005）</label>
-<input type="number" id="rate" value="0.0005" step="0.0001" style="width:100%; padding:8px; margin-bottom:10px;" />
+<div style="max-width: 480px; margin: auto; background: #fff0f5; padding: 20px; border-radius: 10px;">
+  <label>初始本金（美元）</label>
+  <input type="number" id="initial" value="100" style="width:100%; padding:8px; margin-bottom:10px;" />
 
-<label>杠杆倍数</label>
-<input type="number" id="leverage" value="11" style="width:100%; padding:8px; margin-bottom:10px;" />
+  <label>每日收益率（如万分之五填 0.0005）</label>
+  <input type="number" id="rate" value="0.0005" step="0.0001" style="width:100%; padding:8px; margin-bottom:10px;" />
 
-<button onclick="calculate()" style="width:100%; background:#00cc66; color:white; padding:10px; font-size:16px; border:none; border-radius:5px;">计算</button>
+  <label>杠杆倍数</label>
+  <input type="number" id="leverage" value="11" style="width:100%; padding:8px; margin-bottom:10px;" />
 
-<p id="output" style="margin-top: 20px; font-weight: bold;"></p> </div> <script> function calculate() { let initial = parseFloat(document.getElementById("initial").value); let rate = parseFloat(document.getElementById("rate").value); let leverage = parseFloat(document.getElementById("leverage").value); let capital = initial * leverage; let totalReturn = 0; let days = 0; let reinvests = 0; while (capital * rate < 100) { let todayReturn = capital * rate; totalReturn += todayReturn; capital -= todayReturn; if (totalReturn >= 100) { capital += totalReturn * leverage; reinvests++; totalReturn = 0; } days++; } document.getElementById("output").innerText = `首次达到每日返利 $100 需要 ${days} 天，共复投 ${reinvests} 次。`; } </script>
+  <label>期望每日返利金额（美元）</label>
+  <input type="number" id="target" value="100" style="width:100%; padding:8px; margin-bottom:10px;" />
+
+  <button onclick="calculate()" style="width:100%; background:#00cc66; color:white; padding:10px; font-size:16px; border:none; border-radius:5px;">计算</button>
+
+  <p id="output" style="margin-top: 20px; font-weight: bold;"></p>
+</div>
+
+<script>
+function calculate() {
+  let initial = parseFloat(document.getElementById("initial").value);
+  let rate = parseFloat(document.getElementById("rate").value);
+  let leverage = parseFloat(document.getElementById("leverage").value);
+  let targetReturn = parseFloat(document.getElementById("target").value);
+
+  let capital = initial * leverage;
+  let totalReturn = 0;
+  let days = 0;
+  let reinvests = 0;
+
+  while (capital * rate < targetReturn) {
+    let todayReturn = capital * rate;
+    totalReturn += todayReturn;
+    capital -= todayReturn;
+    if (totalReturn >= 100) {
+      capital += totalReturn * leverage;
+      reinvests++;
+      totalReturn = 0;
+    }
+    days++;
+  }
+
+  document.getElementById("output").innerText =
+    `首次达到每日返利 $${targetReturn.toFixed(2)} 需要 ${days} 天，共复投 ${reinvests} 次。`;
+}
+</script>
