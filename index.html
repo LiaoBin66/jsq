@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>返利计算器</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,47 +11,88 @@
     <h1>返利计算器</h1>
   </header>
   <main>
-    <!-- 第一行 -->
-    <div class="form-row">
-      <label>初始本金（美元）<br>
-        <input type="number" id="initial" value="100" />
-      </label>
-      <label>期望每日返利（美元）<br>
-        <input type="number" id="target" value="100" />
-      </label>
+    <div class="input-row">
+      <label for="initial">初始本金（美元）</label>
+      <input type="number" id="initial" value="100" />
+
+      <label for="target">期望每日返利（美元）</label>
+      <input type="number" id="target" value="100" />
     </div>
 
-    <!-- 第二行 -->
-    <div class="form-row">
-      <label>每日收益率（固定）<br>
-        <input type="number" id="rate" value="0.0005" readonly />
-      </label>
-      <label>杠杆位数（固定）<br>
-        <input type="number" id="leverage" value="11" readonly />
-      </label>
+    <div class="input-row">
+      <label>每日收益率（固定）：</label>
+      <input type="number" value="0.0005" disabled />
+
+      <label>杠杆位数（固定）：</label>
+      <input type="number" value="11" disabled />
     </div>
 
-    <!-- 计算按钮 -->
     <button onclick="calculate()">计算</button>
 
-    <!-- 表格 -->
     <div class="table-container">
-      <table id="resultTable">
+      <table>
         <thead>
           <tr>
-            <th>第几天</th>
-            <th>具体日期</th>
+            <th>天数</th>
+            <th>日期</th>
             <th>每日返利</th>
-            <th>累计返利</th>
             <th>复投金额</th>
             <th>累计本金</th>
+            <th>累计返利</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="result"></tbody>
       </table>
     </div>
   </main>
 
-  <script src="script.js"></script>
+  <script>
+    function calculate() {
+      const initial = parseFloat(document.getElementById("initial").value);
+      const target = parseFloat(document.getElementById("target").value);
+      const rate = 0.0005;
+      const leverage = 11;
+
+      let capital = initial;
+      let totalProfit = 0;
+      let days = 0;
+      const result = document.getElementById("result");
+      result.innerHTML = "";
+
+      const today = new Date();
+
+      while (capital * rate * leverage < target) {
+        days++;
+        let profit = capital * rate * leverage;
+        totalProfit += profit;
+
+        let reinvest = 0;
+        let rowClass = "";
+
+        if (totalProfit >= 100) {
+          reinvest = totalProfit;
+          capital += reinvest;
+          totalProfit = 0;
+          rowClass = "highlight";
+        }
+
+        const date = new Date(today);
+        date.setDate(date.getDate() + days);
+        const dateStr = date.toISOString().slice(2, 10).replace(/-/g, "-");
+
+        const row = document.createElement("tr");
+        row.className = rowClass;
+        row.innerHTML = `
+          <td>${days}</td>
+          <td>${dateStr}</td>
+          <td>${profit.toFixed(2)}</td>
+          <td>${reinvest ? reinvest.toFixed(2) : "-"}</td>
+          <td>${capital.toFixed(2)}</td>
+          <td>${totalProfit.toFixed(2)}</td>
+        `;
+        result.appendChild(row);
+      }
+    }
+  </script>
 </body>
 </html>

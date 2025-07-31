@@ -16,40 +16,41 @@ main {
   padding: 10px;
 }
 
-.form-row {
+.input-row {
   display: flex;
-  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
-.form-row label {
-  flex: 1 1 48%;
-  margin-bottom: 5px;
+label {
+  flex-basis: 100%;
   font-size: 14px;
+  margin-top: 5px;
 }
 
 input {
-  width: 100%;
-  padding: 6px;
-  margin-top: 5px;
+  flex: 1 1 45%;
+  padding: 8px;
+  font-size: 16px;
   box-sizing: border-box;
 }
 
 button {
-  width: 100%;
   background-color: #00cc66;
   color: white;
-  padding: 10px;
+  padding: 12px;
   border: none;
+  width: 100%;
   font-size: 16px;
-  margin-bottom: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
 }
 
 .table-container {
+  overflow-x: auto;
   max-height: 60vh;
-  overflow-y: auto;
-  border: 1px solid #ccc;
+  margin-top: 15px;
 }
 
 table {
@@ -64,6 +65,8 @@ th, td {
   text-align: center;
 }
 
-tr.red {
-  background-color: #ffdddd;
+tr.highlight {
+  background-color: #ffe5e5;
+  color: #c00;
+  font-weight: bold;
 }
