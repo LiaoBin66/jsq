@@ -3,148 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>返利计算器</title>
+  <title>复利返利计算器</title>
   <style>
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      background: #f8f9fa;
-      color: #333;
+      font-family: "Segoe UI", sans-serif;
+      background: #fafafa;
+      padding: 10px;
     }
 
-    .app-container {
-      max-width: 100%;
-      padding: 16px;
-    }
-
-    .card {
+    .container {
+      max-width: 480px;
+      margin: auto;
       background: #fff0f5;
       padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
-    label {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: block;
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 14px;
-      font-size: 16px;
+    .row input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      border-radius: 10px;
-      box-sizing: border-box;
+      font-size: 16px;
     }
 
-    input[readonly] {
-      background: #f0f0f0;
+    .row label {
+      flex: 1;
+      font-weight: bold;
+      margin-bottom: 4px;
+      display: block;
     }
 
     button {
       width: 100%;
       background: #00cc66;
       color: white;
-      padding: 14px;
-      font-size: 18px;
+      padding: 12px;
+      font-size: 16px;
       border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin-top: 6px;
+      border-radius: 8px;
     }
 
-    button:hover {
-      background: #00994d;
+    #output {
+      margin-top: 20px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
       font-size: 14px;
     }
 
     th, td {
-      padding: 10px 6px;
-      text-align: center;
+      padding: 8px;
       border: 1px solid #ddd;
+      text-align: center;
     }
 
-    thead {
+    th {
       background: #f0f0f0;
       position: sticky;
       top: 0;
     }
 
-    .highlight {
-      background-color: #ffdddd;
-      font-weight: bold;
+    tr.highlight {
+      background-color: #fffae6;
     }
 
-    @media (max-width: 480px) {
-      input, button {
-        font-size: 16px;
-      }
-
-      table {
-        font-size: 13px;
-      }
+    .date-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <div class="card">
-      <label>初始本金（美元）</label>
-      <input type="number" id="initial" value="100" />
-
-      <label>每日收益率</label>
-      <input type="number" id="rate" value="0.0005" readonly />
-
-      <label>杠杆倍数</label>
-      <input type="number" id="leverage" value="11" readonly />
-
-      <label>期望每日返利金额（美元）</label>
-      <input type="number" id="target" value="100" />
-
-      <button onclick="calculate()">计算</button>
-
-      <div id="output"></div>
+  <div class="container">
+    <!-- 第一行 -->
+    <div class="row">
+      <input type="number" id="initial" placeholder="初始本金" value="100" />
+      <input type="number" id="target" placeholder="目标返利" value="100" />
     </div>
+
+    <!-- 第二行 -->
+    <div class="row">
+      <input type="number" id="rate" value="0.0005" readonly style="background-color: #eee;" />
+      <input type="number" id="leverage" value="11" readonly style="background-color: #eee;" />
+    </div>
+
+    <!-- 第三行 -->
+    <div class="date-label">
+      当前日期：<span id="startDate"></span>
+    </div>
+
+    <!-- 按钮 -->
+    <button onclick="calculate()">计算</button>
+
+    <!-- 输出结果 -->
+    <div id="output"></div>
   </div>
 
   <script>
+    // 设置默认日期为今天
+    const today = new Date();
+    document.getElementById("startDate").textContent = today.toISOString().split("T")[0];
+
     function calculate() {
-      let initial = parseFloat(document.getElementById("initial").value);
-      let rate = parseFloat(document.getElementById("rate").value);
-      let leverage = parseFloat(document.getElementById("leverage").value);
-      let targetReturn = parseFloat(document.getElementById("target").value);
+      const initial = parseFloat(document.getElementById("initial").value);
+      const rate = parseFloat(document.getElementById("rate").value);
+      const leverage = parseFloat(document.getElementById("leverage").value);
+      const targetReturn = parseFloat(document.getElementById("target").value);
+      const startDate = new Date(document.getElementById("startDate").textContent);
 
       let capital = initial * leverage;
       let totalReturn = 0;
       let reinvests = 0;
       let days = 0;
-      let logRows = [];
-
       let cumulativeReturn = 0;
+      let logRows = [];
 
       while (capital * rate < targetReturn) {
         days++;
-        let dailyReturn = capital * rate;
+        const dailyReturn = capital * rate;
         totalReturn += dailyReturn;
         cumulativeReturn += dailyReturn;
         capital -= dailyReturn;
 
         let reinvestNow = false;
         let reinvestAmount = 0;
+
         if (totalReturn >= 100) {
           reinvestNow = true;
           reinvestAmount = totalReturn;
-          capital += totalReturn * leverage;
+          capital += reinvestAmount * leverage;
           totalReturn = 0;
           reinvests++;
         }
@@ -154,16 +152,15 @@
           return: dailyReturn,
           reinvest: reinvestNow ? `$${reinvestAmount.toFixed(2)}` : '',
           capital: capital,
-          cumulativeReturn: cumulativeReturn,
-          highlight: reinvestNow
+          cumulativeReturn: cumulativeReturn
         });
       }
 
       let resultHTML = `
-        <p style="font-weight:bold; color:#333; margin-top: 16px;">
+        <p style="font-weight:bold; color:#333;">
           首次达到每日返利 $${targetReturn.toFixed(2)} 需要 ${days} 天，共复投 ${reinvests} 次。
         </p>
-        <div style="max-height:300px; overflow:auto; border:1px solid #ccc; border-radius:10px;">
+        <div style="max-height:300px; overflow:auto; border:1px solid #ccc;">
           <table>
             <thead>
               <tr>
@@ -176,7 +173,7 @@
             </thead>
             <tbody>
               ${logRows.map(row => `
-                <tr class="${row.highlight ? 'highlight' : ''}">
+                <tr onclick="showDate(${row.day})">
                   <td>${row.day}</td>
                   <td>$${row.return.toFixed(2)}</td>
                   <td>$${row.cumulativeReturn.toFixed(2)}</td>
@@ -187,9 +184,17 @@
             </tbody>
           </table>
         </div>
+        <p id="dateResult" style="margin-top:10px; color: #0066cc;"></p>
       `;
 
       document.getElementById("output").innerHTML = resultHTML;
+    }
+
+    function showDate(daysLater) {
+      const base = new Date(document.getElementById("startDate").textContent);
+      base.setDate(base.getDate() + daysLater);
+      const dateStr = base.toISOString().split("T")[0];
+      document.getElementById("dateResult").textContent = `第 ${daysLater} 天对应的日期是：${dateStr}`;
     }
   </script>
 </body>
