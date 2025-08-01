@@ -3,55 +3,448 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>返利计算器</title>
-  <link rel="stylesheet" href="style.css" />
+  <title data-i18n="title">返利计算器</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px;
+      background-color: #fff0f5;
+      color: #333;
+    }
+    header {
+      background-color: #00cc66;
+      padding: 10px;
+      text-align: center;
+      color: white;
+    }
+    main {
+      padding: 10px;
+    }
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .form-row label {
+      flex: 1 1 calc(50% - 5px);
+      font-size: 14px;
+    }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[readonly] {
+      background-color: #e5e7eb;
+      cursor: not-allowed;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #00cc66;
+      box-shadow: 0 0 0 3px rgba(0, 204, 102, 0.2);
+    }
+    small {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+    button {
+      width: 100%;
+      background-color: #00cc66;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #00b359;
+    }
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 204, 102, 0.3);
+    }
+    .error {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: none;
+      text-align: center;
+    }
+    .result-label {
+      font-size: 14px;
+      color: #333;
+      background-color: #f9fafb;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 5px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .table-container {
+      max-height: 60vh;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #00cc66;
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    tr.red {
+      background-color: #ffdddd;
+      color: red;
+      font-weight: bold;
+    }
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .form-row label {
+        flex: 1 1 100%;
+      }
+      th, td {
+        padding: 4px;
+        font-size: 12px;
+      }
+      .button-row {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>返利计算器</h1>
+    <h1 data-i18n="title">返利计算器</h1>
   </header>
   <main>
-    <!-- 第一行 -->
+    <!-- 语言选择 -->
     <div class="form-row">
-      <label>初始本金（美元）<br>
-        <input type="number" id="initial" value="100" />
-      </label>
-      <label>期望每日返利（美元）<br>
-        <input type="number" id="target" value="100" />
+      <label>
+        <span data-i18n="language">语言</span>
+        <select id="languageSelect" aria-label="选择语言">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+        </select>
       </label>
     </div>
-
-    <!-- 第二行 -->
+    <!-- 第一行：初始本金和期望每日返利 -->
     <div class="form-row">
-      <label>每日收益率（固定）<br>
-        <input type="number" id="rate" value="0.0005" readonly />
+      <label>
+        <span data-i18n="initial">初始本金（美元）</span>
+        <input type="number" id="initial" value="100" min="0" step="0.01" aria-describedby="initial-error" required />
       </label>
-      <label>杠杆位数（固定）<br>
-        <input type="number" id="leverage" value="11" readonly />
+      <label>
+        <span data-i18n="target">期望每日返利（美元）</span>
+        <input type="number" id="target" value="100" min="0" step="0.01" aria-describedby="target-error" required />
       </label>
     </div>
-
-    <!-- 计算按钮 -->
-    <button onclick="calculate()">计算</button>
-
-    <!-- 表格 -->
+    <!-- 第二行：每日收益率和杠杆倍数 -->
+    <div class="form-row">
+      <label>
+        <span data-i18n="rate">每日收益率（固定）</span>
+        <input type="number" id="rate" value="0.0005" readonly aria-describedby="rate-info" />
+        <small id="rate-info" data-i18n="rate-info">固定收益率，由平台设定</small>
+      </label>
+      <label>
+        <span data-i18n="leverage">杠杆倍数（固定）</span>
+        <input type="number" id="leverage" value="11" readonly aria-describedby="leverage-info" />
+        <small id="leverage-info" data-i18n="leverage-info">固定杠杆，由平台设定</small>
+      </label>
+    </div>
+    <!-- 第三行：计算结果标签 -->
+    <div class="form-row">
+      <label>
+        <span data-i18n="result">计算结果</span>
+        <div id="resultLabel" class="result-label" aria-live="polite" data-i18n="result-placeholder">计算后显示总天数和复投次数</div>
+      </label>
+    </div>
+    <!-- 按钮 -->
+    <div class="button-row">
+      <button id="calculateBtn" type="button" data-i18n="calculate">计算</button>
+      <button id="exportCsvBtn" type="button" data-i18n="export-csv">导出 CSV</button>
+    </div>
+    <div id="error" class="error" role="alert" data-i18n="error"></div>
     <div class="table-container">
-      <table id="resultTable">
+      <table id="resultTable" aria-label="返利计算结果">
         <thead>
           <tr>
-            <th>第几天</th>
-            <th>具体日期</th>
-            <th>每日返利</th>
-            <th>累计返利</th>
-            <th>复投金额</th>
-            <th>累计本金</th>
+            <th scope="col" data-i18n="day">第几天</th>
+            <th scope="col" data-i18n="date">具体日期</th>
+            <th scope="col" data-i18n="daily-profit">每日返利</th>
+            <th scope="col" data-i18n="total-profit">累计返利</th>
+            <th scope="col" data-i18n="reinvest">复投金额</th>
+            <th scope="col" data-i18n="principal">累计本金</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
   </main>
+  <script>
+    // 多语言翻译
+    const translations = {
+      zh: {
+        title: '返利计算器',
+        language: '语言',
+        initial: '初始本金（美元）',
+        target: '期望每日返利（美元）',
+        rate: '每日收益率（固定）',
+        'rate-info': '固定收益率，由平台设定',
+        leverage: '杠杆倍数（固定）',
+        'leverage-info': '固定杠杆，由平台设定',
+        result: '计算结果',
+        'result-placeholder': '计算后显示总天数和复投次数',
+        calculate: '计算',
+        'export-csv': '导出 CSV',
+        error: '',
+        'error-initial': '请输入有效的初始本金（大于0）。',
+        'error-target': '请输入有效的期望每日返利（大于0）。',
+        'error-maxdays': '计算超过10000天，未达到目标返利，请调整参数。',
+        day: '第几天',
+        date: '具体日期',
+        'daily-profit': '每日返利',
+        'total-profit': '累计返利',
+        reinvest: '复投金额',
+        principal: '累计本金',
+        'result-text': '完成时总共需 {days} 天，复投 {count} 次',
+        'result-maxdays': '未完成，超过10000天，复投 {count} 次',
+        calculating: '计算中...',
+      },
+      en: {
+        title: 'Rebate Calculator',
+        language: 'Language',
+        initial: 'Initial Principal (USD)',
+        target: 'Target Daily Rebate (USD)',
+        rate: 'Daily Rate (Fixed)',
+        'rate-info': 'Fixed rate, set by the platform',
+        leverage: 'Leverage (Fixed)',
+        'leverage-info': 'Fixed leverage, set by the platform',
+        result: 'Calculation Result',
+        'result-placeholder': 'Shows total days and reinvestment count after calculation',
+        calculate: 'Calculate',
+        'export-csv': 'Export CSV',
+        error: '',
+        'error-initial': 'Please enter a valid initial principal (greater than 0).',
+        'error-target': 'Please enter a valid target daily rebate (greater than 0).',
+        'error-maxdays': 'Calculation exceeds 10000 days, target not reached, please adjust parameters.',
+        day: 'Day',
+        date: 'Date',
+        'daily-profit': 'Daily Rebate',
+        'total-profit': 'Total Rebate',
+        reinvest: 'Reinvestment Amount',
+        principal: 'Total Principal',
+        'result-text': 'Completed in {days} days, reinvested {count} times',
+        'result-maxdays': 'Not completed, exceeds 10000 days, reinvested {count} times',
+        calculating: 'Calculating...',
+      }
+    };
 
-  <script src="script.js"></script>
+    // 更新语言
+    function updateLanguage(lang) {
+      document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[lang][key]) {
+          element.textContent = translations[lang][key];
+        }
+      });
+      // 更新动态文本
+      const resultLabel = document.getElementById('resultLabel');
+      if (resultLabel.textContent.includes('{days}')) {
+        const [days, count] = resultLabel.textContent.match(/\d+/g) || [0, 0];
+        resultLabel.textContent = translations[lang][resultLabel.textContent.includes('未完成') || resultLabel.textContent.includes('Not completed') ? 'result-maxdays' : 'result-text']
+          .replace('{days}', days)
+          .replace('{count}', count);
+      }
+    }
+
+    // 初始化语言
+    document.getElementById('languageSelect').addEventListener('change', (e) => {
+      updateLanguage(e.target.value);
+    });
+    updateLanguage('zh');
+
+    // 绑定按钮事件
+    document.getElementById('calculateBtn').addEventListener('click', calculate);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+
+    /**
+     * 计算返利并填充表格
+     */
+    function calculate() {
+      // 获取输入值
+      const initial = parseFloat(document.getElementById('initial').value);
+      const target = parseFloat(document.getElementById('target').value);
+      const rate = parseFloat(document.getElementById('rate').value);
+      const leverage = parseFloat(document.getElementById('leverage').value);
+      const errorDiv = document.getElementById('error');
+      const resultLabel = document.getElementById('resultLabel');
+      const tbody = document.querySelector('#resultTable tbody');
+      const lang = document.getElementById('languageSelect').value;
+
+      // 清空表格和结果标签
+      tbody.innerHTML = '';
+      resultLabel.textContent = translations[lang].calculating;
+
+      // 验证输入
+      if (!initial || initial <= 0) {
+        errorDiv.textContent = translations[lang]['error-initial'];
+        errorDiv.style.display = 'block';
+        resultLabel.textContent = translations[lang]['result-placeholder'];
+        return;
+      }
+      if (!target || target <= 0) {
+        errorDiv.textContent = translations[lang]['error-target'];
+        errorDiv.style.display = 'block';
+        resultLabel.textContent = translations[lang]['result-placeholder'];
+        return;
+      }
+
+      // 清除错误提示
+      errorDiv.style.display = 'none';
+
+      // 初始化变量
+      let principal = initial;
+      let totalProfit = 0;
+      let day = 0;
+      let reinvestCount = 0;
+      const startDate = new Date();
+      const maxDays = 10000;
+
+      while (true) {
+        day++;
+
+        // 计算每日返利
+        const dailyProfit = principal * rate * leverage;
+        totalProfit += dailyProfit;
+
+        // 检查复投条件
+        let reinvest = 0;
+        if (totalProfit >= 100) {
+          reinvest = totalProfit;
+          principal += reinvest;
+          totalProfit = 0;
+          reinvestCount++;
+        }
+
+        // 格式化日期
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + day - 1);
+        const dateStr = currentDate.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+
+        // 创建表格行
+        const tr = document.createElement('tr');
+        if (reinvest > 0) {
+          tr.classList.add('red');
+          tr.setAttribute('aria-label', lang === 'zh' ? `第${day}天，发生复投 ${reinvest.toFixed(2)} 美元` : `Day ${day}, reinvested ${reinvest.toFixed(2)} USD`);
+        } else {
+          tr.setAttribute('aria-label', lang === 'zh' ? `第${day}天，无复投` : `Day ${day}, no reinvestment`);
+        }
+        tr.innerHTML = `
+          <td>${day}</td>
+          <td>${dateStr}</td>
+          <td>${dailyProfit.toFixed(2)}</td>
+          <td>${totalProfit.toFixed(2)}</td>
+          <td>${reinvest > 0 ? reinvest.toFixed(2) : '-'}</td>
+          <td>${principal.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+
+        // 检查是否达到目标
+        if (dailyProfit >= target) {
+          resultLabel.textContent = translations[lang]['result-text']
+            .replace('{days}', day)
+            .replace('{count}', reinvestCount);
+          break;
+        }
+
+        // 防止无限循环
+        if (day >= maxDays) {
+          errorDiv.textContent = translations[lang]['error-maxdays'];
+          errorDiv.style.display = 'block';
+          resultLabel.textContent = translations[lang]['result-maxdays']
+            .replace('{count}', reinvestCount);
+          break;
+        }
+      }
+    }
+
+    /**
+     * 导出表格为 CSV
+     */
+    function exportToCsv() {
+      const lang = document.getElementById('languageSelect').value;
+      const rows = document.querySelectorAll('#resultTable tr');
+      if (rows.length <= 1) {
+        alert(lang === 'zh' ? '请先计算以生成表格数据' : 'Please calculate first to generate table data');
+        return;
+      }
+
+      const csv = [];
+      const headers = [
+        translations[lang].day,
+        translations[lang].date,
+        translations[lang]['daily-profit'],
+        translations[lang]['total-profit'],
+        translations[lang].reinvest,
+        translations[lang].principal
+      ];
+      csv.push(headers.map(h => `"${h}"`).join(','));
+
+      document.querySelectorAll('#resultTable tbody tr').forEach(row => {
+        const cells = Array.from(row.cells).map(cell => `"${cell.textContent}"`);
+        csv.push(cells.join(','));
+      });
+
+      const csvContent = csv.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `rebate_calculator_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+  </script>
 </body>
 </html>
