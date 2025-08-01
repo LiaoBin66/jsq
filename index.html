@@ -17,10 +17,72 @@
       color: #333;
     }
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       background-color: #00cc66;
       padding: 10px;
-      text-align: center;
       color: white;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .menu-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+    .menu-dropdown.show {
+      display: flex;
+    }
+    .menu-dropdown label, .menu-dropdown button {
+      width: 100%;
+      font-size: 14px;
+    }
+    .menu-dropdown select {
+      width: 100%;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .menu-dropdown button {
+      background-color: #00cc66;
+      color: white;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .menu-dropdown button:hover {
+      background-color: #00b359;
     }
     main {
       padding: 10px;
@@ -34,7 +96,7 @@
     }
     .form-row label {
       flex: 1 1 calc(50% - 3px);
-      min-width: 100px;
+      min-width: 80px;
       font-size: 14px;
     }
     input, select {
@@ -67,7 +129,6 @@
       border: none;
       border-radius: 4px;
       font-size: 16px;
-      margin-bottom: 10px;
       cursor: pointer;
       transition: background-color 0.2s;
     }
@@ -128,21 +189,21 @@
       color: red;
       font-weight: bold;
     }
-    .button-row {
-      display: flex;
-      gap: 5px;
-      flex-wrap: nowrap;
-    }
     @media (max-width: 600px) {
       .form-row label {
-        min-width: 80px;
+        min-width: 60px;
+      }
+      .menu-dropdown {
+        top: 60px;
+        right: 5px;
+        min-width: 150px;
+      }
+      .menu-dropdown label, .menu-dropdown button {
+        font-size: 12px;
       }
       th, td {
         padding: 4px;
         font-size: 12px;
-      }
-      .button-row {
-        flex-direction: column;
       }
     }
   </style>
@@ -150,10 +211,14 @@
 <body>
   <header>
     <h1 data-i18n="title">返利计算器</h1>
-  </header>
-  <main>
-    <!-- 语言选择 -->
-    <div class="form-row">
+    <button class="menu-btn" aria-label="打开菜单" onclick="toggleMenu()">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="6" r="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="12" cy="18" r="2"/>
+      </svg>
+    </button>
+    <div class="menu-dropdown" id="menuDropdown">
       <label>
         <span data-i18n="language">语言</span>
         <select id="languageSelect" aria-label="选择语言">
@@ -161,7 +226,10 @@
           <option value="en">English</option>
         </select>
       </label>
+      <button id="exportCsvBtn" type="button" data-i18n="export-csv" aria-label="导出表格为 CSV">导出 CSV</button>
     </div>
+  </header>
+  <main>
     <!-- 第一行：初始本金和期望每日返利 -->
     <div class="form-row">
       <label>
@@ -193,10 +261,9 @@
         <div id="resultLabel" class="result-label" aria-live="polite" data-i18n="result-placeholder">计算后显示总天数和复投次数</div>
       </label>
     </div>
-    <!-- 按钮 -->
-    <div class="button-row">
+    <!-- 第四行：计算按钮 -->
+    <div class="form-row">
       <button id="calculateBtn" type="button" data-i18n="calculate" aria-label="计算返利">计算</button>
-      <button id="exportCsvBtn" type="button" data-i18n="export-csv" aria-label="导出表格为 CSV">导出 CSV</button>
     </div>
     <div id="error" class="error" role="alert" data-i18n="error"></div>
     <div class="table-container">
@@ -275,6 +342,21 @@
         'export-no-data': 'Please calculate first to generate table data'
       }
     };
+
+    // 切换菜单显示
+    function toggleMenu() {
+      const menu = document.getElementById('menuDropdown');
+      menu.classList.toggle('show');
+    }
+
+    // 点击页面其他区域关闭菜单
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('menuDropdown');
+      const menuBtn = document.querySelector('.menu-btn');
+      if (!menu.contains(e.target) && !menuBtn.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    });
 
     // 更新语言
     function updateLanguage(lang) {
