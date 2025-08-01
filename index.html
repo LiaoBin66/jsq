@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="title">返利计算器</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: sans-serif;
       max-width: 1200px;
@@ -26,18 +29,18 @@
       display: flex;
       justify-content: space-between;
       flex-wrap: nowrap;
-      gap: 10px;
+      gap: 5px;
       margin-bottom: 10px;
     }
     .form-row label {
-      flex: 1 1 calc(50% - 5px);
+      flex: 1 1 calc(50% - 3px);
+      min-width: 100px;
       font-size: 14px;
     }
     input, select {
       width: 100%;
-      padding: 6px;
+      padding: 4px;
       margin-top: 5px;
-      box-sizing: border-box;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
@@ -60,7 +63,7 @@
       width: 100%;
       background-color: #00cc66;
       color: white;
-      padding: 10px;
+      padding: 8px;
       border: none;
       border-radius: 4px;
       font-size: 16px;
@@ -86,12 +89,11 @@
       font-size: 14px;
       color: #333;
       background-color: #f9fafb;
-      padding: 6px;
+      padding: 4px;
       border: 1px solid #ccc;
       border-radius: 4px;
       margin-top: 5px;
       width: 100%;
-      box-sizing: border-box;
     }
     .table-container {
       max-height: 60vh;
@@ -128,17 +130,12 @@
     }
     .button-row {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 5px;
+      flex-wrap: nowrap;
     }
-    @media (max-width: 768px) {
-      .form-row {
-        flex-direction: column;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
+    @media (max-width: 600px) {
       .form-row label {
-        flex: 1 1 100%;
+        min-width: 80px;
       }
       th, td {
         padding: 4px;
@@ -198,8 +195,8 @@
     </div>
     <!-- 按钮 -->
     <div class="button-row">
-      <button id="calculateBtn" type="button" data-i18n="calculate">计算</button>
-      <button id="exportCsvBtn" type="button" data-i18n="export-csv">导出 CSV</button>
+      <button id="calculateBtn" type="button" data-i18n="calculate" aria-label="计算返利">计算</button>
+      <button id="exportCsvBtn" type="button" data-i18n="export-csv" aria-label="导出表格为 CSV">导出 CSV</button>
     </div>
     <div id="error" class="error" role="alert" data-i18n="error"></div>
     <div class="table-container">
@@ -247,6 +244,7 @@
         'result-text': '完成时总共需 {days} 天，复投 {count} 次',
         'result-maxdays': '未完成，超过10000天，复投 {count} 次',
         calculating: '计算中...',
+        'export-no-data': '请先计算以生成表格数据'
       },
       en: {
         title: 'Rebate Calculator',
@@ -274,6 +272,7 @@
         'result-text': 'Completed in {days} days, reinvested {count} times',
         'result-maxdays': 'Not completed, exceeds 10000 days, reinvested {count} times',
         calculating: 'Calculating...',
+        'export-no-data': 'Please calculate first to generate table data'
       }
     };
 
@@ -285,13 +284,22 @@
           element.textContent = translations[lang][key];
         }
       });
-      // 更新动态文本
+      // 更新动态结果标签
       const resultLabel = document.getElementById('resultLabel');
-      if (resultLabel.textContent.includes('{days}')) {
-        const [days, count] = resultLabel.textContent.match(/\d+/g) || [0, 0];
-        resultLabel.textContent = translations[lang][resultLabel.textContent.includes('未完成') || resultLabel.textContent.includes('Not completed') ? 'result-maxdays' : 'result-text']
-          .replace('{days}', days)
-          .replace('{count}', count);
+      if (resultLabel.textContent.includes('{days}') || resultLabel.textContent.includes('Calculating') || resultLabel.textContent.includes('计算中')) {
+        const matches = resultLabel.textContent.match(/\d+/g);
+        if (matches) {
+          const [days, count] = matches;
+          resultLabel.textContent = translations[lang][resultLabel.textContent.includes('未完成') || resultLabel.textContent.includes('Not completed') ? 'result-maxdays' : 'result-text']
+            .replace('{days}', days)
+            .replace('{count}', count);
+        } else {
+          resultLabel.textContent = translations[lang]['result-placeholder'];
+        }
+      }
+      // 重新计算以更新表格日期格式
+      if (document.querySelector('#resultTable tbody').children.length > 0) {
+        calculate();
       }
     }
 
@@ -417,7 +425,7 @@
       const lang = document.getElementById('languageSelect').value;
       const rows = document.querySelectorAll('#resultTable tr');
       if (rows.length <= 1) {
-        alert(lang === 'zh' ? '请先计算以生成表格数据' : 'Please calculate first to generate table data');
+        alert(translations[lang]['export-no-data']);
         return;
       }
 
