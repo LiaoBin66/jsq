@@ -18,17 +18,28 @@
     }
     header {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       background-color: #00cc66;
       padding: 10px;
       color: white;
+      position: relative;
+    }
+    .header-spacer {
+      flex: 1;
+    }
+    .header-title {
+      flex-grow: 0;
+      text-align: center;
+      margin: 0;
     }
     header h1 {
       margin: 0;
       font-size: 24px;
     }
     .menu-btn {
+      position: absolute;
+      right: 5px;
       background: none;
       border: none;
       cursor: pointer;
@@ -50,7 +61,7 @@
       display: none;
       position: absolute;
       top: 50px;
-      right: 10px;
+      right: 0;
       background-color: white;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -210,7 +221,11 @@
 </head>
 <body>
   <header>
-    <h1 data-i18n="title">返利计算器</h1>
+    <div class="header-spacer"></div>
+    <div class="header-title">
+      <h1 data-i18n="title">返利计算器</h1>
+    </div>
+    <div class="header-spacer"></div>
     <button class="menu-btn" aria-label="打开菜单" onclick="toggleMenu()">
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="6" r="2"/>
