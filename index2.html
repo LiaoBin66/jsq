@@ -118,9 +118,9 @@ background-color: yellow;
 <button onclick="calculate()">计算</button>
 
 <div class="results-group">
-<p>返利天数达到投入本金: <span id="daysToPrincipal"></span> 天</p>
-<p>达到期望每天返利的天数: <span id="daysToExpectedReturn"></span> </p>
-<p>复投总次数: <span id="reinvestCount"></span> 次</p>
+<p>达到投入本金: <span id="daysToPrincipal"></span> 天</p>
+<p>达到期望每天返利: <span id="daysToExpectedReturn"></span> </p>
+<p>复投次数: <span id="reinvestCount"></span> 次</p>
 </div>
 
 <div class="table-container">
@@ -129,10 +129,10 @@ background-color: yellow;
 <tr>
 <th>天数</th>
 <th>日期</th>
-<th>每天返利</th>
-<th>累计返利</th>
-<th>复投金额</th>
-<th>累计本金</th>
+<th>返利</th>
+<th>累计</th>
+<th>复投</th>
+<th>本金</th>
 </tr>
 </thead>
 <tbody>
@@ -147,7 +147,7 @@ const principal = parseFloat(document.getElementById("principal").value);
 const expectedDailyReturn = parseFloat(document.getElementById("expectedDailyReturn").value);
 
 if (principal < 100) {
-alert("投入本金必须至少为 100 美元");
+alert("本金100 美元以上");
 return;
 }
 
