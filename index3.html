@@ -143,12 +143,12 @@ background-color: yellow;
 <thead>
 <tr>
 <th>天数</th>
-<th>日期</th>
 <th>返利</th>
 <th>累计</th>
 <th>累计2</th>
 <th>复投</th>
 <th>本金</th>
+<th>日期</th>
 </tr>
 </thead>
 <tbody>
@@ -221,16 +221,16 @@ function calculateReturns(principal, expectedDailyReturn) {
 
         returnsTable.push({
             day: days,
-            date: currentDate.toLocaleDateString('zh-CN', {
-                year: '2-digit',
-                month: '2-digit',
-                day: '2-digit'
-            }).replace(/\//g, '-'),
             dailyReturn: dailyReturn.toFixed(2),
             cumulativeReturn: cumulativeReturn.toFixed(2),
             nonReinvestedReturn: nonReinvestedReturn.toFixed(2),
             reinvestAmount: reinvestAmount.toFixed(2),
-            leveragedPrincipal: leveragedPrincipal.toFixed(2)
+            leveragedPrincipal: leveragedPrincipal.toFixed(2),
+            date: currentDate.toLocaleDateString('zh-CN', {
+                year: '2-digit',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\//g, '-')
         });
 
         if (dailyReturn >= expectedDailyReturn && daysToReachPrincipal !== -1) {
@@ -260,12 +260,12 @@ function populateTable(returnsTable) {
     returnsTable.forEach(data => {
         const row = tableBody.insertRow();
         row.insertCell().textContent = data.day;
-        row.insertCell().textContent = data.date;
         row.insertCell().textContent = data.dailyReturn;
         row.insertCell().textContent = data.cumulativeReturn;
         row.insertCell().textContent = data.nonReinvestedReturn;
         row.insertCell().textContent = data.reinvestAmount;
         row.insertCell().textContent = data.leveragedPrincipal;
+        row.insertCell().textContent = data.date;
 
         if (parseFloat(data.reinvestAmount) > 0) {
             row.classList.add("highlight");
