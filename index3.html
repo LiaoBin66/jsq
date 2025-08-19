@@ -13,6 +13,26 @@ flex-direction: column;
 align-items: center;
 }
 
+h1 {
+font-size: 2em;
+text-align: center;
+margin-bottom: 20px;
+animation: colorChange 6s infinite, scalePulse 2s infinite ease-in-out;
+}
+
+@keyframes colorChange {
+0% { color: #4CAF50; }
+33% { color: #FF0000; }
+66% { color: #1E90FF; }
+100% { color: #4CAF50; }
+}
+
+@keyframes scalePulse {
+0% { transform: scale(1); }
+50% { transform: scale(1.05); }
+100% { transform: scale(1); }
+}
+
 .container {
 width: 100%;
 max-width: 600px;
@@ -100,6 +120,7 @@ background-color: yellow;
 </style>
 </head>
 <body>
+<h1>麻乙科技投种收益计算器</h1>
 <div class="container">
 <div class="input-group">
 <label for="principal">
