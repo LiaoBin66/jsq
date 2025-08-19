@@ -11,7 +11,7 @@ margin: 20px;
 display: flex;
 flex-direction: column;
 align-items: center;
-position: relative; /* 为 Canvas 定位 */
+position: relative;
 overflow-x: hidden;
 }
 
@@ -42,7 +42,7 @@ display: flex;
 flex-direction: column;
 align-items: stretch;
 position: relative;
-z-index: 1; /* 确保内容在 Canvas 上方 */
+z-index: 1;
 }
 
 .input-group {
@@ -136,8 +136,8 @@ top: 0;
 left: 0;
 width: 100%;
 height: 100%;
-z-index: -1; /* 置于背景层 */
-pointer-events: none; /* 避免干扰用户交互 */
+z-index: -1;
+pointer-events: none;
 }
 </style>
 </head>
@@ -301,7 +301,7 @@ const canvas = document.getElementById('snowCanvas');
 const ctx = canvas.getContext('2d');
 let animationFrameId;
 let lastInteractionTime = Date.now();
-const interactionTimeout = 2000; // 2秒无操作后重新开始动画
+const interactionTimeout = 2000;
 
 // 设置 Canvas 大小
 function resizeCanvas() {
@@ -334,14 +334,14 @@ class Dollar {
 
     draw() {
         ctx.font = `${this.size}px Arial`;
-        ctx.fillStyle = `rgba(0, 128, 0, ${this.opacity})`; // 绿色美元符号
+        ctx.fillStyle = `rgba(255, 215, 0, ${this.opacity})`; // 金色美元符号
         ctx.fillText('$', this.x, this.y);
     }
 }
 
 // 堆积效果
-const pileHeight = 50; // 底部堆积区域高度
-let pile = new Array(Math.floor(canvas.width / 10)).fill(0); // 堆积高度数组
+const pileHeight = 50;
+let pile = new Array(Math.floor(canvas.width / 10)).fill(0);
 const dollars = [];
 
 function initDollars() {
@@ -360,7 +360,7 @@ function animateDollars(time) {
     ctx.clearRect(0, 0, canvas.width, canvas.height - pileHeight);
 
     // 绘制堆积
-    ctx.fillStyle = 'rgba(0, 128, 0, 0.3)';
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)'; // 淡金色堆积
     for (let i = 0; i < pile.length; i++) {
         if (pile[i] > 0) {
             ctx.font = '20px Arial';
@@ -392,7 +392,7 @@ function handleInteraction() {
     lastInteractionTime = Date.now();
     cancelAnimationFrame(animationFrameId);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    pile.fill(0); // 清空堆积
+    pile.fill(0);
     setTimeout(() => {
         if (Date.now() - lastInteractionTime >= interactionTimeout) {
             initDollars();
