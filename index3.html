@@ -84,7 +84,7 @@ th,
 td {
 border: 1px solid #ddd;
 padding: 8px;
-text:// left;
+text-align: left;
 }
 
 th {
@@ -113,8 +113,8 @@ background-color: yellow;
 </div>
 <button onclick="calculate()">计算</button>
 <div class="results-group">
-<p>达到投入本金: <span id="daysToPrincipal"></span> 天</p>
-<p>达到期望每天返利: <span id="daysToExpectedReturn"></span> 天</p>
+<p>达到投入本金: <span id="daysToPrincipal"></span></p>
+<p>达到期望每天返利: <span id="daysToExpectedReturn"></span></p>
 <p>复投次数: <span id="reinvestCount"></span> 次</p>
 </div>
 <div class="table-container">
@@ -125,6 +125,7 @@ background-color: yellow;
 <th>日期</th>
 <th>返利</th>
 <th>累计</th>
+<th>累计2</th>
 <th>复投</th>
 <th>本金</th>
 </tr>
@@ -161,7 +162,7 @@ function calculate() {
 function calculateReturns(principal, expectedDailyReturn) {
     let leveragedPrincipal = principal * 11;
     let cumulativeReturn = 0;
-    let nonReinvestedReturn = 0; // 新增变量，跟踪不复投的累计返利
+    let nonReinvestedReturn = 0;
     let days = 0;
     const returnsTable = [];
     const startDate = new Date();
@@ -176,15 +177,12 @@ function calculateReturns(principal, expectedDailyReturn) {
         currentDate.setDate(startDate.getDate() + days - 1);
         const dailyReturn = leveragedPrincipal * 0.0005;
 
-        // 累加不复投的返利，用于计算达到本金的天数
         nonReinvestedReturn += dailyReturn;
 
-        // 检查是否达到初始本金
         if (nonReinvestedReturn >= principal && daysToReachPrincipal === -1) {
             daysToReachPrincipal = days;
         }
 
-        // 检查是否达到期望每天返利
         if (dailyReturn >= expectedDailyReturn && daysToReachExpectedReturn === -1) {
             daysToReachExpectedReturn = days;
         }
@@ -209,11 +207,12 @@ function calculateReturns(principal, expectedDailyReturn) {
             }).replace(/\//g, '-'),
             dailyReturn: dailyReturn.toFixed(2),
             cumulativeReturn: cumulativeReturn.toFixed(2),
+            nonReinvestedReturn: nonReinvestedReturn.toFixed(2),
             reinvestAmount: reinvestAmount.toFixed(2),
             leveragedPrincipal: leveragedPrincipal.toFixed(2)
         });
 
-        if (dailyReturn >= expectedDailyReturn) {
+        if (dailyReturn >= expectedDailyReturn && daysToReachPrincipal !== -1) {
             break;
         }
     }
@@ -243,6 +242,7 @@ function populateTable(returnsTable) {
         row.insertCell().textContent = data.date;
         row.insertCell().textContent = data.dailyReturn;
         row.insertCell().textContent = data.cumulativeReturn;
+        row.insertCell().textContent = data.nonReinvestedReturn;
         row.insertCell().textContent = data.reinvestAmount;
         row.insertCell().textContent = data.leveragedPrincipal;
 
