@@ -89,6 +89,7 @@ text-align: center;
 }
 
 .table-container {
+overflow-x: auto; /* 启用水平滚动 */
 overflow-y: auto;
 max-height: 400px;
 width: 100%;
@@ -98,6 +99,7 @@ table {
 width: 100%;
 border-collapse: collapse;
 margin-top: 20px;
+table-layout: auto; /* 自动分配列宽 */
 }
 
 th,
@@ -112,6 +114,12 @@ background-color: #f2f2f2;
 position: sticky;
 top: 0;
 z-index: 1;
+}
+
+td:last-child,
+th:last-child {
+min-width: 80px; /* 为日期列设置最小宽度 */
+white-space: nowrap; /* 防止日期列换行 */
 }
 
 .highlight {
