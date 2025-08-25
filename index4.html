@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投资计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: colorChange 6s infinite, scalePulse 2s infinite ease-in-out;
+        }
+
+        @keyframes colorChange {
+            0% { color: #4CAF50; }
+            33% { color: #FF0000; }
+            66% { color: #1E90FF; }
+            100% { color: #4CAF50; }
+        }
+
+        @keyframes scalePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            flex: 1;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input:invalid {
+            border-color: #FF0000;
+        }
+
+        .error-message {
+            color: #FF0000;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            flex: 1;
+            box-sizing: border-box;
+        }
+
+        button:hover {
+            background-color: #3e8e41;
+        }
+
+        .results-group {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        p {
+            flex: 1;
+            text-align: center;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 400px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: auto;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        td:last-child, th:last-child {
+            min-width: 80px;
+            white-space: nowrap;
+        }
+
+        .highlight {
+            background-color: yellow;
+        }
+
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snowCanvas"></canvas>
+    <h1>麻乙科技投种收益计算器</h1>
+    <div class="container">
+        <div class="input-group">
+            <label for="principal">
+                本金 (至少 100 美元):
+                <input type="number" id="principal" value="100" min="100" aria-describedby="principal-error">
+                <span id="principal-error" class="error-message">本金需为正数且至少100美元</span>
+            </label>
+            <label for="expectedDailyReturn">
+                期望每天返利 (美元):
+                <input type="number" id="expectedDailyReturn" value="5" min="0" aria-describedby="return-error">
+                <span id="return-error" class="error-message">期望每日返利需为正数</span>
+            </label>
+        </div>
+        <div class="button-group">
+            <button onclick="calculate()">计算</button>
+            <button onclick="reset()">重置</button>
+        </div>
+        <div class="results-group" role="region" aria-live="polite">
+            <p>达到投入本金: <span id="daysToPrincipal"></span></p>
+            <p>达到期望每天返利: <span id="daysToExpectedReturn"></span></p>
+            <p>复投次数: <span id="reinvestCount"></span> 次</p>
+        </div>
+        <div class="table-container">
+            <table id="dataTable" role="grid">
+                <thead>
+                    <tr>
+                        <th>天数</th>
+                        <th>返利</th>
+                        <th>累计</th>
+                        <th>累计2</th>
+                        <th>复投</th>
+                        <th>本金</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function calculate() {
+            const principalInput = document.getElementById("principal");
+            const expectedDailyReturnInput = document.getElementById("expectedDailyReturn");
+            const principalError = document.getElementById("principal-error");
+            const returnError = document.getElementById("return-error");
+
+            const principal = parseFloat(principalInput.value);
+            const expectedDailyReturn = parseFloat(expectedDailyReturnInput.value);
+
+            principalError.style.display = "none";
+            returnError.style.display = "none";
+
+            if (isNaN(principal) || principal < 100) {
+                principalError.style.display = "block";
+                principalInput.focus();
+                return;
+            }
+            if (isNaN(expectedDailyReturn) || expectedDailyReturn < 0) {
+                returnError.style.display = "block";
+                expectedDailyReturnInput.focus();
+                return;
+            }
+
+            const {
+                daysToReachPrincipal,
+                daysToReachExpectedReturn,
+                reinvestCount,
+                returnsTable
+            } = calculateReturns(principal, expectedDailyReturn);
+
+            document.getElementById("daysToPrincipal").textContent = daysToReachPrincipal > 0 ? daysToReachPrincipal + " 天" : "未知";
+            document.getElementById("daysToExpectedReturn").textContent = daysToReachExpectedReturn > 0 ? daysToReachExpectedReturn + " 天" : "未达到期望值";
+            document.getElementById("reinvestCount").textContent = reinvestCount;
+
+            populateTable(returnsTable);
+        }
+
+        function reset() {
+            document.getElementById("principal").value = "100";
+            document.getElementById("expectedDailyReturn").value = "5";
+            document.getElementById("daysToPrincipal").textContent = "";
+            document.getElementById("daysToExpectedReturn").textContent = "";
+            document.getElementById("reinvestCount").textContent = "";
+            document.getElementById("dataTable").querySelector("tbody").innerHTML = "";
+            document.getElementById("principal-error").style.display = "none";
+            document.getElementById("return-error").style.display = "none";
+        }
+
+        function calculateReturns(principal, expectedDailyReturn) {
+            let leveragedPrincipal = principal * 11;
+            let cumulativeReturn = 0;
+            let nonReinvestedReturn = 0;
+            let days = 0;
+            const returnsTable = [];
+            const startDate = new Date();
+            let reinvestCount = 0;
+            let daysToReachExpectedReturn = -1;
+            let daysToReachPrincipal = -1;
+            const maxDays = 5000;
+
+            while (days < maxDays) {
+                days++;
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + days - 1);
+                const dailyReturn = leveragedPrincipal * 0.0005;
+
+                nonReinvestedReturn += dailyReturn;
+
+                if (nonReinvestedReturn >= principal && daysToReachPrincipal === -1) {
+                    daysToReachPrincipal = days;
+                }
+
+                if (dailyReturn >= expectedDailyReturn && daysToReachExpectedReturn === -1) {
+                    daysToReachExpectedReturn = days;
+                }
+
+                cumulativeReturn += dailyReturn;
+                leveragedPrincipal -= dailyReturn;
+
+                let reinvestAmount = 0;
+                // 修改1：只复投累计返利的整数部分
+                if (cumulativeReturn >= 100) {
+                    reinvestAmount = Math.floor(cumulativeReturn); // 只取整数部分
+                    leveragedPrincipal += (reinvestAmount * 11);
+                    cumulativeReturn -= reinvestAmount; // 保留小数部分
+                    reinvestCount++;
+                }
+
+                returnsTable.push({
+                    day: days,
+                    // 修改2：调整“返利”、“累计”、“累计2”精度到4位小数
+                    dailyReturn: dailyReturn.toFixed(4),
+                    cumulativeReturn: cumulativeReturn.toFixed(4),
+                    nonReinvestedReturn: nonReinvestedReturn.toFixed(4),
+                    reinvestAmount: reinvestAmount.toFixed(2),
+                    leveragedPrincipal: leveragedPrincipal.toFixed(2),
+                    date: currentDate.toLocaleDateString('zh-CN', {
+                        year: '2-digit',
+                        month: '2-digit',
+                        day: '2-digit'
+                    }).replace(/\//g, '-')
+                });
+
+                if (dailyReturn >= expectedDailyReturn && daysToReachPrincipal !== -1) {
+                    break;
+                }
+            }
+
+            if (days >= maxDays && daysToReachExpectedReturn === -1) {
+                daysToReachExpectedReturn = -1;
+            }
+            if (days >= maxDays && daysToReachPrincipal === -1) {
+                daysToReachPrincipal = -1;
+            }
+
+            return {
+                daysToReachPrincipal,
+                daysToReachExpectedReturn,
+                reinvestCount,
+                returnsTable
+            };
+        }
+
+        function populateTable(returnsTable) {
+            const tableBody = document.getElementById("dataTable").querySelector("tbody");
+            tableBody.innerHTML = "";
+
+            returnsTable.forEach(data => {
+                const row = tableBody.insertRow();
+                row.insertCell().textContent = data.day;
+                row.insertCell().textContent = data.dailyReturn;
+                row.insertCell().textContent = data.cumulativeReturn;
+                row.insertCell().textContent = data.nonReinvestedReturn;
+                row.insertCell().textContent = data.reinvestAmount;
+                row.insertCell().textContent = data.leveragedPrincipal;
+                row.insertCell().textContent = data.date;
+
+                if (parseFloat(data.reinvestAmount) > 0) {
+                    row.classList.add("highlight");
+                }
+            });
+        }
+
+        // 美元符号下雪动画
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationFrameId;
+        let lastInteractionTime = Date.now();
+        const interactionTimeout = 2000;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Dollar {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * -canvas.height;
+                this.size = Math.random() * 20 + 10;
+                this.speedY = Math.random() * 2 + 1;
+                this.swingAmplitude = Math.random() * 20 + 10;
+                this.swingSpeed = Math.random() * 0.02 + 0.01;
+                this.opacity = Math.random() * 0.5 + 0.5;
+            }
+
+            update(time) {
+                this.y += this.speedY;
+                this.x += Math.sin(time * this.swingSpeed) * this.swingAmplitude / 100;
+                if (this.y > canvas.height) {
+                    this.y = -this.size;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+
+            draw() {
+                ctx.font = `${this.size}px Arial`;
+                ctx.fillStyle = `rgba(255, 215, 0, ${this.opacity})`;
+                ctx.fillText('$', this.x, this.y);
+            }
+        }
+
+        const pileHeight = 50;
+        let pile = new Array(Math.floor(canvas.width / 10)).fill(0);
+        const dollars = [];
+
+        function initDollars() {
+            dollars.length = 0;
+            for (let i = 0; i < 30; i++) {
+                dollars.push(new Dollar());
+            }
+        }
+
+        function animateDollars(time) {
+            if (Date.now() - lastInteractionTime < interactionTimeout) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height - pileHeight);
+
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+            for (let i = 0; i < pile.length; i++) {
+                if (pile[i] > 0) {
+                    ctx.font = '20px Arial';
+                    for (let j = 0; j < pile[i]; j++) {
+                        ctx.fillText('$', i * 10, canvas.height - j * 20);
+                    }
+                }
+            }
+
+            dollars.forEach(dollar => {
+                dollar.update(time);
+                dollar.draw();
+                if (dollar.y > canvas.height - pileHeight) {
+                    const pileIndex = Math.floor(dollar.x / 10);
+                    if (pileIndex >= 0 && pileIndex < pile.length) {
+                        pile[pileIndex]++;
+                        dollar.y = -dollar.size;
+                        dollar.x = Math.random() * canvas.width;
+                    }
+                }
+            });
+
+            animationFrameId = requestAnimationFrame(animateDollars);
+        }
+
+        function handleInteraction() {
+            lastInteractionTime = Date.now();
+            cancelAnimationFrame(animationFrameId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pile.fill(0);
+            setTimeout(() => {
+                if (Date.now() - lastInteractionTime >= interactionTimeout) {
+                    initDollars();
+                    animationFrameId = requestAnimationFrame(animateDollars);
+                }
+            }, interactionTimeout);
+        }
+
+        ['click', 'mousemove', 'touchstart', 'keydown'].forEach(event => {
+            document.addEventListener(event, handleInteraction);
+        });
+
+        initDollars();
+        animationFrameId = requestAnimationFrame(animateDollars);
+    </script>
+</body>
+</html>
