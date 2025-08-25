@@ -287,14 +287,20 @@
                 leveragedPrincipal -= dailyReturn;
 
                 let reinvestAmount = 0;
+                let isReinvested = false;
                 if (cumulativeReturn >= 100) {
                     reinvestAmount = Math.floor(cumulativeReturn);
                     leveragedPrincipal += (reinvestAmount * 11);
                     cumulativeReturn -= reinvestAmount;
                     reinvestCount++;
+                    isReinvested = true;
                 }
 
-                // 修改：reinvestAmount 存储为数值，格式化在 populateTable 中进行
+                // 调试：输出第42天的关键数据
+                if (days === 42) {
+                    console.log(`Day 42: cumulativeReturn=${cumulativeReturn.toFixed(4)}, reinvestAmount=${reinvestAmount}, isReinvested=${isReinvested}`);
+                }
+
                 returnsTable.push({
                     day: days,
                     dailyReturn: dailyReturn,
@@ -306,7 +312,8 @@
                         year: '2-digit',
                         month: '2-digit',
                         day: '2-digit'
-                    }).replace(/\//g, '-')
+                    }).replace(/\//g, '-'),
+                    isReinvested: isReinvested
                 });
 
                 if (dailyReturn >= expectedDailyReturn && daysToReachPrincipal !== -1) {
@@ -343,11 +350,24 @@
                 row.insertCell().textContent = data.leveragedPrincipal.toFixed(2);
                 row.insertCell().textContent = data.date;
 
-                // 修复：使用 Number 确保高亮逻辑可靠
-                if (Number(data.reinvestAmount) > 0) {
+                // 修复：使用 isReinvested 和 reinvestAmount 双重检查高亮
+                if (data.isReinvested || Number(data.reinvestAmount) > 0) {
                     row.classList.add("highlight");
+                    // 调试：输出高亮行的信息
+                    if (data.day === 42) {
+                        console.log(`Highlighting row ${data.day}: reinvestAmount=${data.reinvestAmount}, isReinvested=${data.isReinvested}`);
+                    }
                 }
             });
+
+            // 强制 DOM 更新以确保高亮生效
+            setTimeout(() => {
+                tableBody.querySelectorAll("tr").forEach(row => {
+                    if (row.classList.contains("highlight")) {
+                        row.style.backgroundColor = "yellow";
+                    }
+                });
+            }, 0);
         }
 
         const canvas = document.getElementById('snowCanvas');
