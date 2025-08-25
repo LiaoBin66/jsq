@@ -241,8 +241,14 @@
         }
 
         function reset() {
-            document.getElementById("principal").value = "100";
-            document.getElementById("expectedDailyReturn").value = "5";
+            const principalInput = document.getElementById("principal");
+            const expectedDailyReturnInput = document.getElementById("expectedDailyReturn");
+            // 修复：确保输入框值被正确重置
+            principalInput.value = "100";
+            expectedDailyReturnInput.value = "5";
+            // 触发 input 事件以更新 UI
+            principalInput.dispatchEvent(new Event('input'));
+            expectedDailyReturnInput.dispatchEvent(new Event('input'));
             document.getElementById("daysToPrincipal").textContent = "";
             document.getElementById("daysToExpectedReturn").textContent = "";
             document.getElementById("reinvestCount").textContent = "";
@@ -283,17 +289,15 @@
                 leveragedPrincipal -= dailyReturn;
 
                 let reinvestAmount = 0;
-                // 修改1：只复投累计返利的整数部分
                 if (cumulativeReturn >= 100) {
-                    reinvestAmount = Math.floor(cumulativeReturn); // 只取整数部分
+                    reinvestAmount = Math.floor(cumulativeReturn);
                     leveragedPrincipal += (reinvestAmount * 11);
-                    cumulativeReturn -= reinvestAmount; // 保留小数部分
+                    cumulativeReturn -= reinvestAmount;
                     reinvestCount++;
                 }
 
                 returnsTable.push({
                     day: days,
-                    // 修改2：调整“返利”、“累计”、“累计2”精度到4位小数
                     dailyReturn: dailyReturn.toFixed(4),
                     cumulativeReturn: cumulativeReturn.toFixed(4),
                     nonReinvestedReturn: nonReinvestedReturn.toFixed(4),
@@ -340,13 +344,13 @@
                 row.insertCell().textContent = data.leveragedPrincipal;
                 row.insertCell().textContent = data.date;
 
-                if (parseFloat(data.reinvestAmount) > 0) {
+                // 修复：调整高亮条件，直接比较 reinvestAmount
+                if (data.reinvestAmount > 0) {
                     row.classList.add("highlight");
                 }
             });
         }
 
-        // 美元符号下雪动画
         const canvas = document.getElementById('snowCanvas');
         const ctx = canvas.getContext('2d');
         let animationFrameId;
