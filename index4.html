@@ -243,10 +243,8 @@
         function reset() {
             const principalInput = document.getElementById("principal");
             const expectedDailyReturnInput = document.getElementById("expectedDailyReturn");
-            // 修复：确保输入框值被正确重置
             principalInput.value = "100";
             expectedDailyReturnInput.value = "5";
-            // 触发 input 事件以更新 UI
             principalInput.dispatchEvent(new Event('input'));
             expectedDailyReturnInput.dispatchEvent(new Event('input'));
             document.getElementById("daysToPrincipal").textContent = "";
@@ -296,13 +294,14 @@
                     reinvestCount++;
                 }
 
+                // 修改：reinvestAmount 存储为数值，格式化在 populateTable 中进行
                 returnsTable.push({
                     day: days,
-                    dailyReturn: dailyReturn.toFixed(4),
-                    cumulativeReturn: cumulativeReturn.toFixed(4),
-                    nonReinvestedReturn: nonReinvestedReturn.toFixed(4),
-                    reinvestAmount: reinvestAmount.toFixed(2),
-                    leveragedPrincipal: leveragedPrincipal.toFixed(2),
+                    dailyReturn: dailyReturn,
+                    cumulativeReturn: cumulativeReturn,
+                    nonReinvestedReturn: nonReinvestedReturn,
+                    reinvestAmount: reinvestAmount,
+                    leveragedPrincipal: leveragedPrincipal,
                     date: currentDate.toLocaleDateString('zh-CN', {
                         year: '2-digit',
                         month: '2-digit',
@@ -337,15 +336,15 @@
             returnsTable.forEach(data => {
                 const row = tableBody.insertRow();
                 row.insertCell().textContent = data.day;
-                row.insertCell().textContent = data.dailyReturn;
-                row.insertCell().textContent = data.cumulativeReturn;
-                row.insertCell().textContent = data.nonReinvestedReturn;
-                row.insertCell().textContent = data.reinvestAmount;
-                row.insertCell().textContent = data.leveragedPrincipal;
+                row.insertCell().textContent = data.dailyReturn.toFixed(4);
+                row.insertCell().textContent = data.cumulativeReturn.toFixed(4);
+                row.insertCell().textContent = data.nonReinvestedReturn.toFixed(4);
+                row.insertCell().textContent = data.reinvestAmount.toFixed(2);
+                row.insertCell().textContent = data.leveragedPrincipal.toFixed(2);
                 row.insertCell().textContent = data.date;
 
-                // 修复：调整高亮条件，直接比较 reinvestAmount
-                if (data.reinvestAmount > 0) {
+                // 修复：使用 Number 确保高亮逻辑可靠
+                if (Number(data.reinvestAmount) > 0) {
                     row.classList.add("highlight");
                 }
             });
